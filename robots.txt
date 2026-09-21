@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://burgergw.github.io/hartsrust/sitemap.xml
