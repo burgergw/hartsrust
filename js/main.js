@@ -153,6 +153,77 @@
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(scheduleHero);
   }
 
+  // ---------- Email links ----------
+  // A bare mailto: link does nothing on computers without a desktop mail
+  // app (most webmail users), so on mouse-driven devices offer a choice of
+  // mail app, Gmail, Outlook or copying the address. Phones keep mailto:.
+  var mailLinks = document.querySelectorAll('a[href^="mailto:"]');
+  var finePointer = window.matchMedia("(pointer: fine)");
+  if (mailLinks.length) {
+    var mailMenu = document.createElement("div");
+    mailMenu.className = "mail-menu";
+    mailMenu.hidden = true;
+    mailMenu.setAttribute("role", "dialog");
+    mailMenu.setAttribute("aria-label", "Send an email");
+    document.body.appendChild(mailMenu);
+    var mailOpener = null;
+
+    var closeMailMenu = function (restoreFocus) {
+      if (mailMenu.hidden) return;
+      mailMenu.hidden = true;
+      if (restoreFocus && mailOpener) mailOpener.focus();
+    };
+
+    var openMailMenu = function (link) {
+      var to = link.href.replace(/^mailto:/, "").split("?")[0];
+      var subjectMatch = link.href.match(/[?&]subject=([^&]*)/);
+      var subject = subjectMatch ? decodeURIComponent(subjectMatch[1]) : "Hunting enquiry";
+      var enc = encodeURIComponent;
+      mailMenu.innerHTML =
+        '<p class="mail-menu-title">Email <strong>' + to + "</strong></p>" +
+        '<a href="mailto:' + to + "?subject=" + enc(subject) + '">Open email app</a>' +
+        '<a href="https://mail.google.com/mail/?view=cm&amp;fs=1&amp;to=' + enc(to) + "&amp;su=" + enc(subject) + '" target="_blank" rel="noopener">Gmail</a>' +
+        '<a href="https://outlook.live.com/mail/0/deeplink/compose?to=' + enc(to) + "&amp;subject=" + enc(subject) + '" target="_blank" rel="noopener">Outlook</a>' +
+        '<button type="button" class="mail-copy">Copy email address</button>';
+      mailMenu.hidden = false;
+      var r = link.getBoundingClientRect();
+      var width = mailMenu.offsetWidth;
+      var left = Math.min(Math.max(8, r.left + window.scrollX), window.scrollX + document.documentElement.clientWidth - width - 8);
+      var top = r.bottom + window.scrollY + 8;
+      if (r.bottom + mailMenu.offsetHeight + 16 > window.innerHeight) top = r.top + window.scrollY - mailMenu.offsetHeight - 8;
+      mailMenu.style.left = left + "px";
+      mailMenu.style.top = top + "px";
+      mailMenu.querySelector("a").focus();
+      mailMenu.querySelector(".mail-copy").addEventListener("click", function () {
+        var btn = this;
+        var done = function () { btn.textContent = "Copied " + to; };
+        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(to).then(done, done);
+        else done();
+      });
+    };
+
+    mailLinks.forEach(function (link) {
+      link.addEventListener("click", function (event) {
+        if (!finePointer.matches) return;
+        event.preventDefault();
+        event.stopPropagation();
+        if (!mailMenu.hidden && mailOpener === link) { closeMailMenu(false); return; }
+        mailOpener = link;
+        openMailMenu(link);
+      });
+    });
+    mailMenu.addEventListener("click", function (event) {
+      if (event.target.closest("a")) setTimeout(function () { closeMailMenu(false); }, 0);
+    });
+    document.addEventListener("click", function (event) {
+      if (!event.target.closest(".mail-menu")) closeMailMenu(false);
+    });
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape") closeMailMenu(true);
+    });
+    window.addEventListener("resize", function () { closeMailMenu(false); });
+  }
+
   // ---------- Footer year ----------
   var yearEl = document.getElementById("year");
   if (yearEl) yearEl.textContent = new Date().getFullYear();

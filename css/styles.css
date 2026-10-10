@@ -840,6 +840,34 @@ ol.price-note li + li { margin-top: 6px; }
 .contact-card .k { display: block; font-size: 12px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted-2); }
 .contact-card .v { display: block; font-family: var(--serif); font-size: 1.2rem; overflow-wrap: anywhere; }
 
+/* Email chooser (opened from any mailto link on desktop) */
+.mail-menu {
+  position: absolute;
+  z-index: 300;
+  min-width: 250px;
+  padding: 8px;
+  background: var(--white);
+  border: 1px solid var(--cream-2);
+  box-shadow: var(--shadow);
+}
+.mail-menu[hidden] { display: none; }
+.mail-menu-title { margin: 6px 12px 8px; font-size: 13px; color: var(--muted-2); }
+.mail-menu-title strong { color: var(--forest); font-weight: 600; }
+.mail-menu a, .mail-menu button {
+  display: block;
+  width: 100%;
+  padding: 11px 12px;
+  background: none;
+  border: 0;
+  font: inherit;
+  font-size: 15px;
+  text-align: left;
+  color: var(--forest);
+  text-decoration: none;
+  cursor: pointer;
+}
+.mail-menu a:hover, .mail-menu button:hover, .mail-menu a:focus-visible, .mail-menu button:focus-visible { background: var(--cream); color: var(--accent); }
+
 /* ==========================================================================
    Footer
    ========================================================================== */
