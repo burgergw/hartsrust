@@ -119,6 +119,40 @@
     });
   }
 
+  // ---------- Home hero: keep the photo's subject clear of the text ----------
+  // The img carries data-subject="x1,y1,x2,y2" (natural pixels). Shift the
+  // crop so the subject stands in the gap between .hero-brand and .hero-copy;
+  // if there's no room for it, slide it out of frame sideways instead.
+  var heroImg = document.querySelector(".home-hero > img[data-subject]");
+  function placeHeroSubject() {
+    var hero = heroImg.parentElement;
+    var brand = hero.querySelector(".hero-brand");
+    var copy = hero.querySelector(".hero-copy");
+    if (!brand || !copy) return;
+    var box = heroImg.dataset.subject.split(",").map(Number);
+    var nw = heroImg.naturalWidth || 1600, nh = heroImg.naturalHeight || 1066;
+    var W = hero.clientWidth, H = hero.clientHeight;
+    var s = Math.max(W / nw, H / nh), iw = nw * s, ih = nh * s;
+    var top = hero.getBoundingClientRect().top;
+    var gapTop = brand.getBoundingClientRect().bottom - top;
+    var gapBottom = copy.getBoundingClientRect().top - top;
+    var oy = Math.min(0, Math.max(H - ih, (gapTop + gapBottom) / 2 - ((box[1] + box[3]) / 2) * s));
+    var ox = (W - iw) / 2;
+    var subjTop = oy + box[1] * s, subjBottom = oy + box[3] * s;
+    if (subjTop < gapTop + 4 || subjBottom > gapBottom - 4) {
+      if (box[0] * s > W) ox = 0;                      // crop from the left: subject off to the right
+      else if (iw - box[2] * s >= W) ox = W - iw;      // crop from the right: subject off to the left
+    }
+    heroImg.style.objectPosition = Math.round(ox) + "px " + Math.round(oy) + "px";
+  }
+  if (heroImg) {
+    var heroFrame = 0;
+    var scheduleHero = function () { cancelAnimationFrame(heroFrame); heroFrame = requestAnimationFrame(placeHeroSubject); };
+    if (heroImg.complete) scheduleHero(); else heroImg.addEventListener("load", scheduleHero);
+    window.addEventListener("resize", scheduleHero);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(scheduleHero);
+  }
+
   // ---------- Footer year ----------
   var yearEl = document.getElementById("year");
   if (yearEl) yearEl.textContent = new Date().getFullYear();
