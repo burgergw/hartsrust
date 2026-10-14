@@ -1,0 +1,43 @@
+# Hartsrust: web server settings for Hostinger (Apache/LiteSpeed).
+# The local preview server ignores this file.
+
+DirectoryIndex index.html
+ErrorDocument 404 /404.html
+Options -Indexes
+
+RewriteEngine On
+RewriteBase /
+
+# Block hidden files and folders (.git, .gitignore, .htaccess),
+# but leave .well-known open for SSL certificate checks.
+RewriteRule (^|/)\.(?!well-known(/|$)) - [F,L]
+
+# On hartsrustfarm.com only (the temporary Hostinger address is left alone):
+# send www to the bare domain, and http to https.
+RewriteCond %{HTTP_HOST} ^www\.hartsrustfarm\.com$ [NC]
+RewriteRule ^ https://hartsrustfarm.com%{REQUEST_URI} [R=301,L]
+RewriteCond %{HTTP_HOST} ^hartsrustfarm\.com$ [NC]
+RewriteCond %{HTTPS} !=on
+RewriteCond %{HTTP:X-Forwarded-Proto} !=https
+RewriteRule ^ https://hartsrustfarm.com%{REQUEST_URI} [R=301,L]
+
+# Addresses from the old website-builder site.
+RewriteRule ^hartsrust/?$ /hartsrust-house [R=301,L,NC]
+RewriteRule ^the-karoo-experience-draft/?$ /the-karoo-experience [R=301,L,NC]
+RewriteRule ^(a-blog-post-copy-|newBlogPost-)[^/]*/?$ / [R=301,L]
+
+# Clean page addresses: /index.html -> /, /goodhope.html -> /goodhope
+RewriteCond %{THE_REQUEST} \s/+index(\.html)?[\s?] [NC]
+RewriteRule ^ / [R=301,L]
+RewriteCond %{THE_REQUEST} \s/+([^?\s]+?)\.html[\s?] [NC]
+RewriteRule ^ /%1 [R=301,L,NE]
+
+# /goodhope/ -> /goodhope
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.+)/$ /$1 [R=301,L]
+
+# Serve /goodhope from goodhope.html
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME}.html -f
+RewriteRule ^(.+)$ $1.html [L]
